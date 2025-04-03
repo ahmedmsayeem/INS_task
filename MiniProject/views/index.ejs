@@ -1,23 +1,147 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Names</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        form {
+            margin: 15px auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            max-width: 500px;
+        }
+        input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+        li {
+            background: #fff;
+            margin: 10px auto;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 60%;
+            text-align: left;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        strong {
+            color: #333;
+        }
+        p {
+            margin: 5px 0 0;
+            color: #555;
+            font-size: 14px;
+        }
+        .instructions, .algorithm {
+            position: fixed;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+            font-size: 13px;
+            text-align: left;
+            line-height: 1.5;
+        }
+        .instructions {
+            bottom: 20px;
+            right: 20px;
+            width: 220px;
+            text-align: right;
+        }
+        .algorithm {
+            bottom: 20px;
+            left: 20px;
+            text-align: left;
+            width: 260px;
+        }
+        .algorithm ul {
+            padding-left: 15px;
+            margin-top: 5px;
+        }
+        .algorithm li {
+            background: none;
+            border: none;
+            width: auto;
+            padding: 3px 0;
+            font-size: 12px;
+        }
+    </style>
 </head>
 <body>
+
     <h1>User Names</h1>
+
     <form action="/add-user" method="POST">
         <input type="text" name="name" placeholder="Enter your name" required>
         <input type="text" name="password" placeholder="Enter password to encrypt" required>
         <button type="submit">Add User</button>
     </form>
+
     <form action="/decrypt" method="POST"> 
         <input type="text" name="globalPassword" placeholder="Enter global password" required>
         <button type="submit">Decrypt All</button>
     </form>
+
     <ul>
         <% users.forEach(user => { %>
-            <li>Name: <%= user.name %> <p>Password: <%= user.password %></p></li>
+            <li>
+                <strong>Name:</strong> <%= user.name %> 
+                <p><strong>Password:</strong> <%= user.password %></p>
+            </li>
         <% }) %>
     </ul>
+
+    <div class="instructions">
+        <p><strong>Instructions:</strong></p>
+        <p>🔹 Enter a user name and password to encrypt.</p>
+        <p>🔹 See the names decrypted with your password.</p>
+        <p>🔹 Enter the global password to decrypt all names.</p>
+    </div>
+
+    <div class="algorithm">
+        <p><strong>Encryption Details:</strong></p>
+        <ul>
+            <li>🔒 <strong>Data Storage:</strong> AES-256-CBC for name encryption.</li>
+            <li>🔐 <strong>Password Security:</strong> bcrypt hashing.</li>
+            <li>🌍 <strong>Secure Transmission:</strong> HTTPS recommended.</li>
+            <li>✍ <strong>Digital Signatures:</strong> RSA/ECDSA (not yet implemented).</li>
+        </ul>
+    </div>
+
 </body>
 </html>
