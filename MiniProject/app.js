@@ -13,7 +13,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const SECRET_KEY = cryptoModule.randomBytes(32); 
 const IV_LENGTH = 16; // AES IV length
 
-// Encryption function
+
 function encrypt(text) {
     const iv = cryptoModule.randomBytes(IV_LENGTH);
     const cipher = cryptoModule.createCipheriv('aes-256-cbc', SECRET_KEY, iv);
@@ -22,7 +22,6 @@ function encrypt(text) {
     return iv.toString('hex') + ':' + encrypted; 
 }
 
-// Decryption function
 function decrypt(text) {
     try {
         const parts = text.split(':');
@@ -37,7 +36,7 @@ function decrypt(text) {
     }
 }
 
-// Initialize the database
+
 db.serialize(() => {
     db.run('CREATE TABLE users (name TEXT, password TEXT)');
 });
@@ -96,7 +95,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
-
-// Algorithm details
-console.log('Encryption Algorithm: AES-256-CBC');
-console.log('Password Hashing Algorithm: bcrypt');
