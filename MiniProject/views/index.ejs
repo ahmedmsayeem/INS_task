@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Names</title>
+</head>
+<body>
+    <h1>User Names</h1>
+    <form action="/add-user" method="POST">
+        <input type="text" name="name" placeholder="Enter your name" required>
+        <input type="text" name="password" placeholder="Enter password to encrypt" required>
+        <button type="submit">Add User</button>
+    </form>
+    <form action="/decrypt" method="POST"> 
+        <input type="text" name="globalPassword" placeholder="Enter global password" required>
+        <button type="submit">Decrypt All</button>
+    </form>
+    <ul>
+        <% users.forEach(user => { %>
+            <li>Name: <%= user.name %> <p>Password: <%= user.password %></p></li>
+        <% }) %>
+    </ul>
+</body>
+</html>
