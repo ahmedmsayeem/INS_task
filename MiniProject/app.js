@@ -4,7 +4,8 @@ const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
 const cryptoModule = require('crypto');
 const nodemailer = require('nodemailer');
-import process from 'process';
+const process = require('process');
+
 
 const app = express();
 const db = new sqlite3.Database(':memory:');
@@ -13,7 +14,7 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const SECRET_KEY = cryptoModule.randomBytes(32); 
-const IV_LENGTH = 16; // AES IV length
+const IV_LENGTH = 16;
 const gmail = process.env.EMAIL
 const email_password = process.env.PASSWORD
 
@@ -39,7 +40,7 @@ function decrypt(text) {
     }
 }
 
-// Generate RSA key pair for digital signatures
+
 const { generateKeyPairSync, sign, verify } = cryptoModule;
 const { privateKey, publicKey } = generateKeyPairSync('rsa', {
     modulusLength: 2048,
@@ -47,13 +48,13 @@ const { privateKey, publicKey } = generateKeyPairSync('rsa', {
     privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
 });
 
-// Function to generate a digital signature
+
 function generateSignature(message) {
     const signature = sign('sha256', Buffer.from(message), privateKey);
     return signature.toString('hex');
 }
 
-// Function to verify a digital signature
+
 function verifySignature(message, signature) {
     return verify('sha256', Buffer.from(message), publicKey, Buffer.from(signature, 'hex'));
 }
@@ -103,8 +104,8 @@ app.post('/decrypt', async (req, res) => {
             rows.map(async (user) => {
                 const isMatch = await bcrypt.compare(globalPassword, user.password);
                 return {
-                    name: isMatch ? decrypt(user.name) : 'password wrong', // Decrypt only if password matches
-                    password: isMatch ? globalPassword : 'password wrong',
+                    name: isMatch ? decrypt(user.name) : 'not your content', // Decrypt only if password matches
+                    password: isMatch ? globalPassword : 'not your content',
                 };
             })
         );
@@ -112,25 +113,24 @@ app.post('/decrypt', async (req, res) => {
     });
 });
 
-// Configure nodemailer with SMTP
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com', // Replace with your SMTP host
-    port: 587, // Replace with your SMTP port
-    secure: false, // Use true for 465, false for other ports
+    host: 'smtp.gmail.com', 
+    port: 587, 
+    secure: false,
     auth: {
-        user: gmail, // Replace with your email
-        pass: email_password // Replace with your email password
+        user: gmail,
+        pass: email_password
     }
 });
 
-// Route to handle email sending with digital signature
+
 app.post('/send-email', (req, res) => {
     const { email, message } = req.body;
     if (!email || !message) {
         return res.status(400).send('Email and message are required');
     }
 
-    const signature = generateSignature(message); // Generate digital signature
+    const signature = generateSignature(message); 
     const emailDetails = {
         recipient: email,
         time: new Date().toLocaleString(),
@@ -154,26 +154,25 @@ app.post('/send-email', (req, res) => {
     });
 });
 
-// Route to display digital signature on the site
+// to display signature on screen
 app.post('/generate-signature', (req, res) => {
     const { message } = req.body;
     if (!message) {
         return res.status(400).send('Message is required');
     }
 
-    const signature = generateSignature(message); // Generate digital signature
-    res.render('index', { users: [], signature }); // Pass the signature to the view
+    const signature = generateSignature(message);
+    res.render('index', { users: [], signature }); 
 });
 
-// Route to verify a digital signature
 app.post('/verify-signature', (req, res) => {
     const { message, signature } = req.body;
     if (!message || !signature) {
         return res.status(400).send('Message and signature are required');
     }
 
-    const isValid = verifySignature(message, signature); // Verify the signature
-    res.render('index', { users: [], signature, message, isValid }); // Pass the verification result to the view
+    const isValid = verifySignature(message, signature); 
+    res.render('index', { users: [], signature, message, isValid }); 
 });
 
 const PORT = process.env.PORT || 3000;
