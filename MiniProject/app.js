@@ -3,6 +3,8 @@ const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
 const cryptoModule = require('crypto');
+const nodemailer = require('nodemailer');
+import process from 'process';
 
 const app = express();
 const db = new sqlite3.Database(':memory:');
@@ -12,7 +14,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 const SECRET_KEY = cryptoModule.randomBytes(32); 
 const IV_LENGTH = 16; // AES IV length
-
+const gmail = process.env.EMAIL
+const email_password = process.env.PASSWORD
 
 function encrypt(text) {
     const iv = cryptoModule.randomBytes(IV_LENGTH);
@@ -36,6 +39,24 @@ function decrypt(text) {
     }
 }
 
+// Generate RSA key pair for digital signatures
+const { generateKeyPairSync, sign, verify } = cryptoModule;
+const { privateKey, publicKey } = generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
+});
+
+// Function to generate a digital signature
+function generateSignature(message) {
+    const signature = sign('sha256', Buffer.from(message), privateKey);
+    return signature.toString('hex');
+}
+
+// Function to verify a digital signature
+function verifySignature(message, signature) {
+    return verify('sha256', Buffer.from(message), publicKey, Buffer.from(signature, 'hex'));
+}
 
 db.serialize(() => {
     db.run('CREATE TABLE users (name TEXT, password TEXT)');
@@ -56,8 +77,8 @@ app.post('/add-user', async (req, res) => {
         return res.redirect('/');
     }
     try {
-        const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
-        const encryptedName = encrypt(name); // Encrypt the name
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const encryptedName = encrypt(name);
         db.run('INSERT INTO users (name, password) VALUES (?, ?)', [encryptedName, hashedPassword], (err) => {
             if (err) {
                 return res.status(500).send('Database error');
@@ -89,6 +110,70 @@ app.post('/decrypt', async (req, res) => {
         );
         res.render('index', { users: decryptedUsers });
     });
+});
+
+// Configure nodemailer with SMTP
+const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com', // Replace with your SMTP host
+    port: 587, // Replace with your SMTP port
+    secure: false, // Use true for 465, false for other ports
+    auth: {
+        user: gmail, // Replace with your email
+        pass: email_password // Replace with your email password
+    }
+});
+
+// Route to handle email sending with digital signature
+app.post('/send-email', (req, res) => {
+    const { email, message } = req.body;
+    if (!email || !message) {
+        return res.status(400).send('Email and message are required');
+    }
+
+    const signature = generateSignature(message); // Generate digital signature
+    const emailDetails = {
+        recipient: email,
+        time: new Date().toLocaleString(),
+        signed: true
+    };
+
+    const mailOptions = {
+        from: gmail,
+        to: email,
+        subject: 'Message with Digital Signature',
+        text: `Message: ${message}\n\nDigital Signature: ${signature}`
+    };
+
+    transporter.sendMail(mailOptions, (err, info) => {
+        if (err) {
+            console.error('Error sending email:', err);
+            return res.status(500).send('Failed to send email');
+        }
+        console.log('Email sent:', info.response);
+        res.render('index', { users: [], emailDetails }); // Pass email details to the view
+    });
+});
+
+// Route to display digital signature on the site
+app.post('/generate-signature', (req, res) => {
+    const { message } = req.body;
+    if (!message) {
+        return res.status(400).send('Message is required');
+    }
+
+    const signature = generateSignature(message); // Generate digital signature
+    res.render('index', { users: [], signature }); // Pass the signature to the view
+});
+
+// Route to verify a digital signature
+app.post('/verify-signature', (req, res) => {
+    const { message, signature } = req.body;
+    if (!message || !signature) {
+        return res.status(400).send('Message and signature are required');
+    }
+
+    const isValid = verifySignature(message, signature); // Verify the signature
+    res.render('index', { users: [], signature, message, isValid }); // Pass the verification result to the view
 });
 
 const PORT = process.env.PORT || 3000;

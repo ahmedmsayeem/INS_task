@@ -84,7 +84,7 @@
             text-align: right;
         }
         .algorithm {
-            bottom: 20px;
+            top: 20px;
             left: 20px;
             text-align: left;
             width: 260px;
@@ -100,23 +100,45 @@
             padding: 3px 0;
             font-size: 12px;
         }
+        textarea {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: none;
+        }
+        .signature {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: left;
+        }
+        .signature h3 {
+            margin: 0 0 10px;
+            color: #333;
+        }
+        .signature p {
+            word-wrap: break-word;
+            color: #555;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
 
     <h1>User Names</h1>
+    <h3>1. Secure data storage    </h3>
 
     <form action="/add-user" method="POST">
         <input type="text" name="name" placeholder="Enter your name" required>
         <input type="text" name="password" placeholder="Enter password to encrypt" required>
         <button type="submit">Add User</button>
     </form>
-
-    <form action="/decrypt" method="POST"> 
-        <input type="text" name="globalPassword" placeholder="Enter global password" required>
-        <button type="submit">Decrypt All</button>
-    </form>
-
+    <br><br>
     <ul>
         <% users.forEach(user => { %>
             <li>
@@ -126,22 +148,73 @@
         <% }) %>
     </ul>
 
-    <div class="instructions">
+
+    <form action="/decrypt" method="POST"> 
+        <input type="text" name="globalPassword" placeholder="Enter password to read your details" required>
+        <button type="submit">Decrypt All</button>
+    </form>
+    
+
+    <br><br>
+    <h3>2.  Secure data transmission (SMTP/HTTPS) </h3  >
+    <form action="/send-email" method="POST">
+        <input type="email" name="email" placeholder="Enter recipient's email" required>
+        <textarea name="message" placeholder="Enter your message" rows="4" required></textarea>
+        <button type="submit">Send Email with Signature</button>
+    </form>
+
+    <% if (typeof emailDetails !== 'undefined') { %>
+        <div class="signature">
+            <h3>Email Sent:</h3>
+            <p><strong>Recipient:</strong> <%= emailDetails.recipient %></p>
+            <p><strong>Time:</strong> <%= emailDetails.time %></p>
+            <p><strong>Signed:</strong> <%= emailDetails.signed ? "Yes" : "No" %></p>
+        </div>
+    <% } %>
+
+
+    <h3>3. Creation of digital signatures (Check out your gmail) </h3  >
+        <p> Varify signature and message sent in email  </p>
+        
+    <form action="/verify-signature" method="POST">
+        <textarea name="message" placeholder="Enter message to verify" rows="4" required></textarea>
+        <textarea name="signature" placeholder="Enter signature to verify" rows="4" required></textarea>
+        <button type="submit">Verify Digital Signature</button>
+    </form>
+
+    <% if (typeof isValid !== 'undefined') { %>
+        <div class="signature">
+            <h3>Signature Verification:</h3>
+            <p><%= isValid ? "The signature is valid." : "The signature is invalid." %></p>
+        </div>
+    <% } %>
+
+    <% if (typeof signature !== 'undefined' && typeof message !== 'undefined') { %>
+        <div class="signature">
+            <h3>Digital Signature:</h3>
+            <p><strong>Message:</strong> <%= message %></p>
+            <p><strong>Signature:</strong> <%= signature %></p>
+        </div>
+    <% } %>
+
+    
+
+    <!-- <div class="instructions">
         <p><strong>Instructions:</strong></p>
         <p>🔹 Enter a user name and password to encrypt.</p>
         <p>🔹 See the names decrypted with your password.</p>
         <p>🔹 Enter the global password to decrypt all names.</p>
     </div>
-
-    <div class="algorithm">
-        <p><strong>Encryption Details:</strong></p>
-        <ul>
-            <li>🔒 <strong>Data Storage:</strong> AES-256-CBC for name encryption.</li>
-            <li>🔐 <strong>Password Security:</strong> bcrypt hashing.</li>
-            <li>🌍 <strong>Secure Transmission:</strong> HTTPS recommended.</li>
-            <li>✍ <strong>Digital Signatures:</strong> RSA/ECDSA (not yet implemented).</li>
-        </ul>
-    </div>
+ -->
+ <div class="algorithm">
+    <p><strong>Encryption Details:</strong></p>
+    <ul>
+        <li>🔒 <strong>Data Storage:</strong> AES-256-CBC for name encryption.</li>
+        <li>🔐 <strong>Password Security:</strong> bcrypt hashing.</li>
+        <li>🌍 <strong>Secure Transmission:</strong> SMTP with Gmail and HTTPS recommended.</li>
+        <li>✍ <strong>Digital Signatures:</strong> RSA for signing and verifying messages.</li>
+    </ul>
+</div>
 
 </body>
 </html>
